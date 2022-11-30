@@ -13,7 +13,7 @@ env:
 
 jobs:
   pre:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ci-runner]
     outputs:
       image: ${{ steps.set.outputs.image }}
     steps:
@@ -37,24 +37,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      -
-        uses: dysnix/find-latest-tag@v1
-        id: latest
-        with:
-          regex: '^v\d'
-          compared-to-tag: ${{ github.ref }}
-          repository: ${{ github.repository }}
-      -
-        name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ needs.pre.outputs.image }}
-          flavor: |
-            latest=${{ steps.latest.outputs.newer == 'true' || steps.latest.outputs.equal == 'true' }}
-          tags: |
-            type=ref,event=tag
-            type=ref,event=branch
+      # -
+        # uses: dysnix/find-latest-tag@v1
+        # id: latest
+        # with:
+        #   regex: '^v\d'
+        #   compared-to-tag: ${{ github.ref }}
+        #   repository: ${{ github.repository }}
+      # -
+        # name: Docker meta
+        # id: meta
+        # uses: docker/metadata-action@v3
+        # with:
+        #   images: ${{ needs.pre.outputs.image }}
+        #   flavor: |
+        #     latest=${{ steps.latest.outputs.newer == 'true' || steps.latest.outputs.equal == 'true' }}
+        #   tags: |
+        #     type=ref,event=tag
+        #     type=ref,event=branch
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -77,9 +77,9 @@ jobs:
         with:
           context: .
           file: docker/Dockerfile.zksync
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          tags: prometheus-indexer-metrics-test
+          # labels: ${{ steps.meta.outputs.labels }}
+          push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
       -
