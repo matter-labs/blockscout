@@ -3,6 +3,8 @@ defmodule Explorer.Token.BalanceReader do
   Reads Token's balances using Smart Contract functions from the blockchain.
   """
 
+  require Logger
+
   alias Explorer.SmartContract.Reader
 
   @balance_function_abi [
