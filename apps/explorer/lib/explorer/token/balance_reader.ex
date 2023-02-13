@@ -29,6 +29,28 @@ defmodule Explorer.Token.BalanceReader do
     }
   ]
 
+  @eth_balance_function_abi [
+    %{
+      "type" => "function",
+      "stateMutability" => "view",
+      "payable" => false,
+      "outputs" => [
+        %{
+          "type" => "uint256",
+          "name" => "balance"
+        }
+      ],
+      "name" => "balanceOf",
+      "inputs" => [
+        %{
+          "type" => "uint256",
+          "name" => "tokenOwner"
+        }
+      ],
+      "constant" => true
+    }
+  ]
+
   @erc1155_balance_function_abi [
     %{
       "constant" => true,
@@ -45,12 +67,22 @@ defmodule Explorer.Token.BalanceReader do
           %{token_contract_address_hash: String.t(), address_hash: String.t(), block_number: non_neg_integer()}
         ]) :: [{:ok, non_neg_integer()} | {:error, String.t()}]
   def get_balances_of(token_balance_requests) do
-    balances = token_balance_requests
+    requests = token_balance_requests
     |> Enum.map(&format_balance_request/1)
-    |> Reader.query_contracts(@balance_function_abi)
-    |> Enum.map(&format_balance_result/1)
 
-    Logger.warn(fn -> ["Request: ", inspect(token_balance_requests), "Got balances: ", inspect(balances)] end)
+    Logger.warn(fn -> ["Request: ", inspect(requests)] end)
+
+    queries = []
+    for req <- requests do
+      if req.contract_address =~ "000000000000000000000000000000000000800A" do
+        queries = queries ++ Reader.query_contracts([req], @eth_balance_function_abi)
+      else
+        queries = queries ++ Reader.query_contracts([req], @balance_function_abi)
+      end
+    end
+    balances = Enum.map(List.flatten(queries), &format_balance_result/1)
+
+    Logger.warn(fn -> ["Got balances: ", inspect(balances)] end)
 
     balances
   end
