@@ -43,10 +43,16 @@ defmodule Explorer.Token.BalanceReader do
           %{token_contract_address_hash: String.t(), address_hash: String.t(), block_number: non_neg_integer()}
         ]) :: [{:ok, non_neg_integer()} | {:error, String.t()}]
   def get_balances_of(token_balance_requests) do
-    token_balance_requests
+    requests = token_balance_requests
     |> Enum.map(&format_balance_request/1)
+    Logger.warn(fn -> ["Request: ", inspect(requests)] end)
+
+    balances = requests
     |> Reader.query_contracts(@balance_function_abi)
     |> Enum.map(&format_balance_result/1)
+    Logger.warn(fn -> ["Got balances: ", inspect(balances)] end)
+
+    balances
   end
 
   @spec get_balances_of_with_abi(
@@ -81,7 +87,7 @@ defmodule Explorer.Token.BalanceReader do
        }) do
     method_id = "70a08231";
     # Change method id for getting balance of ZkSync Ether.
-    if token_contract_address_hash =~ "000000000000000000000000000000000000800A" do
+    if token_contract_address_hash =~ "000000000000000000000000000000000000800a" do
       method_id = "9cc7f708";
     end
     %{
