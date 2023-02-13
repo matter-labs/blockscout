@@ -79,9 +79,14 @@ defmodule Explorer.Token.BalanceReader do
          block_number: block_number,
          token_contract_address_hash: token_contract_address_hash
        }) do
+    method_id = "70a08231";
+    # Change method id for getting balance of ZkSync Ether.
+    if token_contract_address_hash =~ "000000000000000000000000000000000000800A" do
+      method_id = "9cc7f708";
+    end
     %{
       contract_address: token_contract_address_hash,
-      method_id: "70a08231",
+      method_id: method_id,
       args: [address_hash],
       block_number: block_number
     }
