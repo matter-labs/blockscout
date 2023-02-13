@@ -3,6 +3,8 @@ defmodule Explorer.Token.BalanceReader do
   Reads Token's balances using Smart Contract functions from the blockchain.
   """
 
+  require Logger
+
   alias Explorer.SmartContract.Reader
 
   @balance_function_abi [
@@ -43,10 +45,14 @@ defmodule Explorer.Token.BalanceReader do
           %{token_contract_address_hash: String.t(), address_hash: String.t(), block_number: non_neg_integer()}
         ]) :: [{:ok, non_neg_integer()} | {:error, String.t()}]
   def get_balances_of(token_balance_requests) do
-    token_balance_requests
+    balances = token_balance_requests
     |> Enum.map(&format_balance_request/1)
     |> Reader.query_contracts(@balance_function_abi)
     |> Enum.map(&format_balance_result/1)
+
+    Logger.warn(fn -> ["Request: ", inspect(token_balance_requests), "Got balances: ", inspect(balances)] end)
+
+    balances
   end
 
   @spec get_balances_of_with_abi(
