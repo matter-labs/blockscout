@@ -38,5 +38,4 @@ defmodule BlockScoutWeb.AddressContractVerificationViaStandardJsonInputControlle
       )
     end
   end
-
 end

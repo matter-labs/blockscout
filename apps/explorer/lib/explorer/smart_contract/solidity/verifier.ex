@@ -40,8 +40,6 @@ defmodule Explorer.SmartContract.Solidity.Verifier do
     constructor_arguments = Map.get(params, "constructor_arguments", "")
     autodetect_constructor_arguments = params |> Map.get("autodetect_constructor_args", "false") |> parse_boolean()
 
-
-
     solc_output =
       CodeCompiler.run(
         [
@@ -97,7 +95,6 @@ defmodule Explorer.SmartContract.Solidity.Verifier do
       error_response ->
         error_response
     end
-
   end
 
   defp verify(address_hash, params) do
@@ -111,7 +108,8 @@ defmodule Explorer.SmartContract.Solidity.Verifier do
     optimization_runs = Map.get(params, "optimization_runs", 200)
     autodetect_constructor_arguments = params |> Map.get("autodetect_constructor_args", "false") |> parse_boolean()
 
-    solc_output = CodeCompiler.run(
+    solc_output =
+      CodeCompiler.run(
         name: name,
         compiler_version: compiler_version,
         code: contract_source_code,
@@ -139,40 +137,40 @@ defmodule Explorer.SmartContract.Solidity.Verifier do
   end
 
   defp compare_bytecodes(
-    %{"abi" => abi, "bytecode" => bytecode, "file_path" => _file_path, "name" => _name},
-    address_hash,
-    arguments_data,
-    autodetect_constructor_arguments,
-    contract_source_code,
-    contract_name
-  ),
-  do:
-    compare_bytecodes(
-      {:ok, %{"abi" => abi, "bytecode" => bytecode}},
-      address_hash,
-      arguments_data,
-      autodetect_constructor_arguments,
-      contract_source_code,
-      contract_name
-    )
+         %{"abi" => abi, "bytecode" => bytecode, "file_path" => _file_path, "name" => _name},
+         address_hash,
+         arguments_data,
+         autodetect_constructor_arguments,
+         contract_source_code,
+         contract_name
+       ),
+       do:
+         compare_bytecodes(
+           {:ok, %{"abi" => abi, "bytecode" => bytecode}},
+           address_hash,
+           arguments_data,
+           autodetect_constructor_arguments,
+           contract_source_code,
+           contract_name
+         )
 
   defp compare_bytecodes(
-    %{"abi" => abi, "bytecode" => bytecode},
-    address_hash,
-    arguments_data,
-    autodetect_constructor_arguments,
-    contract_source_code,
-    contract_name
-  ),
-  do:
-    compare_bytecodes(
-      {:ok, %{"abi" => abi, "bytecode" => bytecode}},
-      address_hash,
-      arguments_data,
-      autodetect_constructor_arguments,
-      contract_source_code,
-      contract_name
-    )
+         %{"abi" => abi, "bytecode" => bytecode},
+         address_hash,
+         arguments_data,
+         autodetect_constructor_arguments,
+         contract_source_code,
+         contract_name
+       ),
+       do:
+         compare_bytecodes(
+           {:ok, %{"abi" => abi, "bytecode" => bytecode}},
+           address_hash,
+           arguments_data,
+           autodetect_constructor_arguments,
+           contract_source_code,
+           contract_name
+         )
 
   # credo:disable-for-next-line /Complexity/
   defp compare_bytecodes(
@@ -183,7 +181,6 @@ defmodule Explorer.SmartContract.Solidity.Verifier do
          contract_source_code,
          contract_name
        ) do
-
     blockchain_created_tx_input =
       case Chain.smart_contract_creation_tx_bytecode(address_hash) do
         %{init: init, created_contract_code: _created_contract_code} ->
@@ -196,7 +193,7 @@ defmodule Explorer.SmartContract.Solidity.Verifier do
 
     %{
       "data" => constructor_data,
-      "factoryDeps" => blockchain_bytecode_without_whisper,
+      "factoryDeps" => blockchain_bytecode_without_whisper
     } = deserialize_creation_tx(blockchain_created_tx_input)
 
     empty_constructor_arguments = arguments_data == "" or arguments_data == nil
@@ -206,7 +203,8 @@ defmodule Explorer.SmartContract.Solidity.Verifier do
         {:error, :bytecode}
 
       has_constructor_with_params?(abi) && autodetect_constructor_arguments ->
-        result = ConstructorArguments.find_constructor_arguments(constructor_data, abi, contract_source_code, contract_name)
+        result =
+          ConstructorArguments.find_constructor_arguments(constructor_data, abi, contract_source_code, contract_name)
 
         if result do
           {:ok, %{abi: abi, constructor_arguments: result}}

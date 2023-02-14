@@ -39,6 +39,9 @@ defmodule Explorer.Token.BalanceReader do
     }
   ]
 
+  @predeployed_eth_address "0x000000000000000000000000000000000000800a"
+  @eth_method_id "9cc7f708"
+
   @spec get_balances_of([
           %{token_contract_address_hash: String.t(), address_hash: String.t(), block_number: non_neg_integer()}
         ]) :: [{:ok, non_neg_integer()} | {:error, String.t()}]
@@ -79,11 +82,14 @@ defmodule Explorer.Token.BalanceReader do
          block_number: block_number,
          token_contract_address_hash: token_contract_address_hash
        }) do
-    method_id = "70a08231";
     # Change method id for getting balance of ZkSync Ether.
-    if token_contract_address_hash =~ "000000000000000000000000000000000000800A" do
-      method_id = "9cc7f708";
-    end
+    method_id =
+      if token_contract_address_hash |> to_string() |> String.downcase() == @predeployed_eth_address do
+        @eth_method_id
+      else
+        "70a08231"
+      end
+
     %{
       contract_address: token_contract_address_hash,
       method_id: method_id,

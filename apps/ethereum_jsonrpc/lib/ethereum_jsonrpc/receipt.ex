@@ -300,7 +300,8 @@ defmodule EthereumJSONRPC.Receipt do
   end
 
   # Arbitrum/ZkSync fields
-  defp entry_to_elixir({key, _}) when key in ~w(returnData returnCode feeStats l1BlockNumber l1BatchNumber l1BatchTxIndex l2ToL1Logs) do
+  defp entry_to_elixir({key, _})
+       when key in ~w(returnData returnCode feeStats l1BlockNumber l1BatchNumber l1BatchTxIndex l2ToL1Logs) do
     :ignore
   end
 

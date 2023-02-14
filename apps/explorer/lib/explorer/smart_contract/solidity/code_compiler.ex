@@ -90,12 +90,12 @@ defmodule Explorer.SmartContract.Solidity.CodeCompiler do
         ]
       )
 
-      with {:ok, decoded} <- Jason.decode(response),
-            {:ok, contracts} <- get_contracts(decoded),
-            %{"abi" => abi, "evm" => %{"bytecode" => %{"object" => bytecode}}} <-
-              get_contract_info(contracts, name) do
-        {:ok, %{"abi" => abi, "bytecode" => bytecode, "name" => name}}
-      else
+    with {:ok, decoded} <- Jason.decode(response),
+         {:ok, contracts} <- get_contracts(decoded),
+         %{"abi" => abi, "evm" => %{"bytecode" => %{"object" => bytecode}}} <-
+           get_contract_info(contracts, name) do
+      {:ok, %{"abi" => abi, "bytecode" => bytecode, "name" => name}}
+    else
       {:error, %Jason.DecodeError{}} ->
         {:error, :compilation}
 
@@ -116,17 +116,17 @@ defmodule Explorer.SmartContract.Solidity.CodeCompiler do
     # compiler_version = Keyword.fetch!(params, :compiler_version)
 
     with {:ok, valid_json} <- tune_json(json_input),
-          {response, _status} <-
-            System.cmd(
-              "node",
-              [
-                Application.app_dir(:explorer, "priv/compile_solc_standard_json_input.js"),
-                create_source_file(valid_json)
-              ]
-            ),
-            {:ok, decoded} <- Jason.decode(response),
-            {:ok, contracts} <- get_contracts_standard_input_verification(decoded) do
-         fetch_candidates(contracts, name)
+         {response, _status} <-
+           System.cmd(
+             "node",
+             [
+               Application.app_dir(:explorer, "priv/compile_solc_standard_json_input.js"),
+               create_source_file(valid_json)
+             ]
+           ),
+         {:ok, decoded} <- Jason.decode(response),
+         {:ok, contracts} <- get_contracts_standard_input_verification(decoded) do
+      fetch_candidates(contracts, name)
     else
       {:error, %Jason.DecodeError{}} ->
         {:error, :compilation}
@@ -155,6 +155,7 @@ defmodule Explorer.SmartContract.Solidity.CodeCompiler do
       for {file, content} <- contracts,
           {contract_name, %{"abi" => abi, "evm" => %{"bytecode" => %{"object" => bytecode}}}} <- content,
           do: %{"abi" => abi, "bytecode" => bytecode, "name" => contract_name, "file_path" => file}
+
     {:ok, candidates}
   end
 
@@ -168,13 +169,13 @@ defmodule Explorer.SmartContract.Solidity.CodeCompiler do
             {contract_name, %{"abi" => abi, "evm" => %{"bytecode" => %{"object" => bytecode}}}} <- content,
             contract_name == name,
             do: %{"abi" => abi, "bytecode" => bytecode, "name" => contract_name, "file_path" => file}
+
       {:ok, candidates}
     end
   end
 
   defp fetch_candidates(contracts, file_name, name)
        when is_binary(name) and is_binary(file_name) and is_map(contracts) do
-
     case contracts[file_name][name] do
       %{"abi" => abi, "evm" => %{"bytecode" => %{"object" => bytecode}}} ->
         {:ok, [%{"abi" => abi, "bytecode" => bytecode, "name" => name, "file_path" => file_name}]}
@@ -188,6 +189,7 @@ defmodule Explorer.SmartContract.Solidity.CodeCompiler do
 
   def get_contract_info(contracts, name) do
     new_versions_name = ":" <> name
+
     case contracts do
       %{^new_versions_name => response} ->
         response
@@ -204,8 +206,8 @@ defmodule Explorer.SmartContract.Solidity.CodeCompiler do
   def parse_error({:error, %{"errors" => errors}}), do: {:error, errors}
   def parse_error({:error, _} = error), do: error
 
-#defp get_contracts(%{"contracts" => %{"*" => contracts}}), do: {:ok, contracts}
-  #defp get_contracts(%{"contracts" => %{"" => contracts}}), do: {:ok, contracts}
+  # defp get_contracts(%{"contracts" => %{"*" => contracts}}), do: {:ok, contracts}
+  # defp get_contracts(%{"contracts" => %{"" => contracts}}), do: {:ok, contracts}
   defp get_contracts(response) do
     firstKey = response["contracts"] |> Map.keys() |> Enum.at(0)
     test = response["contracts"][firstKey]
@@ -214,7 +216,6 @@ defmodule Explorer.SmartContract.Solidity.CodeCompiler do
 
   defp get_contracts_standard_input_verification(%{"contracts" => contracts}), do: {:ok, contracts}
   defp get_contracts_standard_input_verification(response), do: {:error, response}
-
 
   defp optimize_value(false), do: "0"
   defp optimize_value("false"), do: "0"

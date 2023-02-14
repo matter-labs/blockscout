@@ -49,7 +49,10 @@ defmodule BlockScoutWeb.Notifier do
         {:chain_event, :contract_verification_result, :on_demand, {address_hash, contract_verification_result, conn}}
       ) do
     verification_from_json_upload? = Map.has_key?(conn.params, "file")
-    verification_from_standard_json_input? = verification_from_json_upload? && Map.has_key?(conn.params, "smart_contract")
+
+    verification_from_standard_json_input? =
+      verification_from_json_upload? && Map.has_key?(conn.params, "smart_contract")
+
     verification_from_flattened_source? = Map.has_key?(conn.params, "external_libraries")
     compiler = :solc
 

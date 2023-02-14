@@ -25,6 +25,30 @@ defmodule Indexer.TokenBalances do
     }
   ]
 
+  @eth_balance_function_abi [
+    %{
+      "type" => "function",
+      "stateMutability" => "view",
+      "payable" => false,
+      "outputs" => [
+        %{
+          "type" => "uint256",
+          "name" => "balance"
+        }
+      ],
+      "name" => "balanceOf",
+      "inputs" => [
+        %{
+          "type" => "uint256",
+          "name" => "_account"
+        }
+      ],
+      "constant" => true
+    }
+  ]
+
+  @predeployed_eth_address "0x000000000000000000000000000000000000800a"
+
   @doc """
   Fetches TokenBalances from specific Addresses and Blocks in the Blockchain
 
@@ -47,13 +71,20 @@ defmodule Indexer.TokenBalances do
   def fetch_token_balances_from_blockchain(token_balances) do
     Logger.debug("fetching token balances", count: Enum.count(token_balances))
 
+    eth_token_balances =
+      token_balances
+      |> Enum.filter(fn request ->
+        request.token_contract_address_hash |> to_string() |> String.downcase() == @predeployed_eth_address
+      end)
+
     regular_token_balances =
       token_balances
       |> Enum.filter(fn request ->
         if Map.has_key?(request, :token_type) do
-          request.token_type !== "ERC-1155"
+          request.token_type !== "ERC-1155" &&
+            request.token_contract_address_hash |> to_string() |> String.downcase() != @predeployed_eth_address
         else
-          true
+          request.token_contract_address_hash |> to_string() |> String.downcase() != @predeployed_eth_address || true
         end
       end)
 
@@ -67,6 +98,12 @@ defmodule Indexer.TokenBalances do
         end
       end)
 
+    requested_eth_token_balances =
+      eth_token_balances
+      |> BalanceReader.get_balances_of_with_abi(@eth_balance_function_abi)
+      |> Stream.zip(eth_token_balances)
+      |> Enum.map(fn {result, token_balance} -> set_token_balance_value(result, token_balance) end)
+
     requested_regular_token_balances =
       regular_token_balances
       |> BalanceReader.get_balances_of()
@@ -79,7 +116,9 @@ defmodule Indexer.TokenBalances do
       |> Stream.zip(erc1155_token_balances)
       |> Enum.map(fn {result, token_balance} -> set_token_balance_value(result, token_balance) end)
 
-    requested_token_balances = requested_regular_token_balances ++ requested_erc1155_token_balances
+    requested_token_balances =
+      requested_regular_token_balances ++ requested_erc1155_token_balances ++ requested_eth_token_balances
+
     fetched_token_balances = Enum.filter(requested_token_balances, &ignore_request_with_errors/1)
 
     requested_token_balances
