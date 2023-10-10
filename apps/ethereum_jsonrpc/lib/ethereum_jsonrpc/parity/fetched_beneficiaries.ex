@@ -66,6 +66,7 @@ defmodule EthereumJSONRPC.Parity.FetchedBeneficiaries do
   """
   def from_responses(responses, id_to_params) when is_list(responses) and is_map(id_to_params) do
     responses
+    |> EthereumJSONRPC.sanitize_responses(id_to_params)
     |> Enum.map(&response_to_params_set(&1, id_to_params))
     |> Enum.reduce(
       %EthereumJSONRPC.FetchedBeneficiaries{},

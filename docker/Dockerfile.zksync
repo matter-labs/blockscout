@@ -23,7 +23,7 @@ ADD . .
 RUN apt-get update -y && apt-get install -y curl build-essential git && \
     # Get Rust \
     apt-get update -y && apt-get install -y curl && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && \
     . $HOME/.cargo/env && \
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs && \
